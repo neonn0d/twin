@@ -23,21 +23,21 @@ export function saveKnowledge(params: Record<string, unknown>): string {
   lines.push(`# ${project} \u2014 ${topic}`, "", summary, "");
 
   if (sections) for (const s of sections) {
-    const h = s.heading.trim(), c = s.content.trim();
+    const h = String(s?.heading || "").trim(), c = String(s?.content || "").trim();
     if (h) lines.push(`## ${h}`, "");
     if (c) lines.push(c, "");
   }
 
   if (items?.length) {
     lines.push("| Item | Detail |", "|:-----|:-------|");
-    for (const it of items) lines.push(`| \`${it.item.trim()}\` | ${it.detail.trim()} |`);
+    for (const it of items) lines.push(`| \`${String(it?.item || "").trim()}\` | ${String(it?.detail || "").trim()} |`);
     lines.push("");
   }
 
   if (diagram) { lines.push("```mermaid", diagram.trim(), "```", ""); }
 
   if (patterns) for (const p of patterns) {
-    const n = p.name.trim(), l = p.language?.trim() || "typescript", c = p.code.trim();
+    const n = String(p?.name || "").trim(), l = String(p?.language || "typescript").trim(), c = String(p?.code || "").trim();
     if (n) lines.push(`### ${n}`, "");
     lines.push(`\`\`\`${l}`, c, "```", "");
   }

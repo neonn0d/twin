@@ -20,7 +20,7 @@ export function logSession(params) {
     if (items?.length) {
         lines.push("| File / Thing | What |", "|:-------------|:-----|");
         for (const it of items)
-            lines.push(`| \`${it.item.trim()}\` | ${it.detail.trim()} |`);
+            lines.push(`| \`${String(it?.item || "").trim()}\` | ${String(it?.detail || "").trim()} |`);
         lines.push("");
     }
     if (diagram) {
