@@ -4,7 +4,7 @@
   "description": "MCP server for AI memory in an Obsidian vault",
   "type": "module",
   "main": "dist/index.js",
-  "bin": { "twin-mcp": "./dist/index.js" },
+  "bin": { "twin-mcp": "./dist/index.js", "twin-setup": "./dist/setup.js" },
   "files": ["dist"],
   "scripts": {
     "build": "tsc",

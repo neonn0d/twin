@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolRequest } from "@modelcontextprotocol/sdk/types.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { saveKnowledge, getKnowledge, listKnowledge, searchKnowledge } from "./tools/brain.js";
 import { logSession, updateProgress, sessionStart, sessionEnd } from "./tools/session.js";
 import { getProjectContext, setProjectContext, setNextSteps } from "./tools/project.js";
@@ -13,8 +13,8 @@ const tools = [
   { name: "get_project_context", description: "Get project README and today's session file", inputSchema: { type: "object", properties: { cwd: { type: "string" } }, required: ["cwd"] } },
   { name: "log_session", description: "Structured session log with work table, discoveries, warnings, tips", inputSchema: { type: "object", properties: { cwd: { type: "string" }, title: { type: "string" }, summary: { type: "string" }, items: { type: "array" }, discoveries: { type: "array" }, warnings: { type: "array" }, tips: { type: "array" }, next_session: { type: "string" }, diagram: { type: "string" } }, required: ["cwd", "title", "summary"] } },
   { name: "update_progress", description: "Quick mid-session timestamped note", inputSchema: { type: "object", properties: { cwd: { type: "string" }, text: { type: "string" } }, required: ["cwd", "text"] } },
-  { name: "session_start", description: "Create README + session file (use log_session instead)", inputSchema: { type: "object", properties: { cwd: { type: "string" }, goal: { type: "string" } }, required: ["cwd"] } },
-  { name: "session_end", description: "Quick end-of-session summary (use log_session instead)", inputSchema: { type: "object", properties: { cwd: { type: "string" }, summary: { type: "string" } }, required: ["cwd", "summary"] } },
+  { name: "session_start", description: "Create README + session file (use log_session)", inputSchema: { type: "object", properties: { cwd: { type: "string" }, goal: { type: "string" } }, required: ["cwd"] } },
+  { name: "session_end", description: "Quick end-of-session summary (use log_session)", inputSchema: { type: "object", properties: { cwd: { type: "string" }, summary: { type: "string" } }, required: ["cwd", "summary"] } },
   { name: "save_knowledge", description: "Save brain knowledge, merges with existing notes", inputSchema: { type: "object", properties: { cwd: { type: "string" }, topic: { type: "string" }, summary: { type: "string" }, sections: { type: "array" }, items: { type: "array" }, discoveries: { type: "array" }, warnings: { type: "array" }, tips: { type: "array" }, questions: { type: "array" }, tasks: { type: "array" }, diagram: { type: "string" }, patterns: { type: "array" } }, required: ["cwd", "topic", "summary"] } },
   { name: "get_knowledge", description: "Read a brain note, list all if topic empty", inputSchema: { type: "object", properties: { cwd: { type: "string" }, topic: { type: "string" } }, required: ["cwd"] } },
   { name: "list_knowledge", description: "List all brain topics", inputSchema: { type: "object", properties: { cwd: { type: "string" } }, required: ["cwd"] } },
@@ -37,7 +37,7 @@ const tools = [
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 
-server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
+server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
   const { name, arguments: args } = request.params;
   const p = (args || {}) as Record<string, unknown>;
   const h: Record<string, (p: Record<string, unknown>) => string> = {
