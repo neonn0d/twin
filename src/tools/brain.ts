@@ -2,6 +2,19 @@ import fs from "node:fs";
 import path from "node:path";
 import { VAULT_PATH, parseFrontmatter, brainDir, slugify, toStr, wrap, mergeBrain } from "../utils.js";
 
+export function deleteKnowledge(params: Record<string, unknown>): string {
+  const cwd = params.cwd as string;
+  const topic = params.topic as string;
+  const slug = slugify(topic);
+  const brain = brainDir(cwd);
+  const p = path.join(brain, `${slug}.md`);
+  if (!fs.existsSync(p)) return `No brain note for '${topic}'`;
+  const trash = path.join(brain, ".trash");
+  fs.mkdirSync(trash, { recursive: true });
+  fs.renameSync(p, path.join(trash, `${slug}.md`));
+  return `Brain note '${topic}' moved to trash`;
+}
+
 export function saveKnowledge(params: Record<string, unknown>): string {
   const cwd = params.cwd as string;
   const topic = params.topic as string;
@@ -81,9 +94,10 @@ export function getKnowledge(params: Record<string, unknown>): string {
 export function listKnowledge(params: Record<string, unknown>): string {
   const cwd = params.cwd as string;
   const brain = brainDir(cwd);
-  if (!fs.existsSync(brain)) return "No brain notes yet";
+  const rel = path.relative(VAULT_PATH, brain);
+  if (!fs.existsSync(brain)) return `No brain notes yet (looked in ${rel})`;
   const files = fs.readdirSync(brain).filter(f => f.endsWith(".md")).sort();
-  if (!files.length) return "No brain notes yet";
+  if (!files.length) return `No brain notes yet (looked in ${rel})`;
   const rows: string[] = [];
   for (const f of files) {
     const topic = f.replace(".md", "");
@@ -100,7 +114,7 @@ export function searchKnowledge(params: Record<string, unknown>): string {
   const query = params.query as string;
   const cs = params.case_sensitive as boolean | undefined;
   const brain = brainDir(cwd);
-  if (!fs.existsSync(brain)) return "No brain notes yet";
+  if (!fs.existsSync(brain)) return `No brain notes yet (looked in ${path.relative(VAULT_PATH, brain)})`;
   let pattern: RegExp;
   try { pattern = new RegExp(query, cs ? "" : "i"); }
   catch { pattern = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), cs ? "" : "i"); }

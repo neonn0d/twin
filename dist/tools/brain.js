@@ -1,6 +1,19 @@
 import fs from "node:fs";
 import path from "node:path";
 import { VAULT_PATH, parseFrontmatter, brainDir, slugify, toStr, wrap, mergeBrain } from "../utils.js";
+export function deleteKnowledge(params) {
+    const cwd = params.cwd;
+    const topic = params.topic;
+    const slug = slugify(topic);
+    const brain = brainDir(cwd);
+    const p = path.join(brain, `${slug}.md`);
+    if (!fs.existsSync(p))
+        return `No brain note for '${topic}'`;
+    const trash = path.join(brain, ".trash");
+    fs.mkdirSync(trash, { recursive: true });
+    fs.renameSync(p, path.join(trash, `${slug}.md`));
+    return `Brain note '${topic}' moved to trash`;
+}
 export function saveKnowledge(params) {
     const cwd = params.cwd;
     const topic = params.topic;
@@ -102,11 +115,12 @@ export function getKnowledge(params) {
 export function listKnowledge(params) {
     const cwd = params.cwd;
     const brain = brainDir(cwd);
+    const rel = path.relative(VAULT_PATH, brain);
     if (!fs.existsSync(brain))
-        return "No brain notes yet";
+        return `No brain notes yet (looked in ${rel})`;
     const files = fs.readdirSync(brain).filter(f => f.endsWith(".md")).sort();
     if (!files.length)
-        return "No brain notes yet";
+        return `No brain notes yet (looked in ${rel})`;
     const rows = [];
     for (const f of files) {
         const topic = f.replace(".md", "");
@@ -123,7 +137,7 @@ export function searchKnowledge(params) {
     const cs = params.case_sensitive;
     const brain = brainDir(cwd);
     if (!fs.existsSync(brain))
-        return "No brain notes yet";
+        return `No brain notes yet (looked in ${path.relative(VAULT_PATH, brain)})`;
     let pattern;
     try {
         pattern = new RegExp(query, cs ? "" : "i");
