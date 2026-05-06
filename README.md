@@ -73,13 +73,26 @@ MIT
 
 ## Using twin
 
-Once installed, forget about it. Your AI agent handles everything. When you start a session, it loads your project context from the vault. When you finish, it saves what happened.
+Twin gives the agent tools — it doesn't run itself. Memory persists only when the agent calls `save_knowledge` / `log_session` to write, and only loads back when the agent calls `get_project_context` / `get_knowledge` to read. The vault is solid; the loop closes when both ends fire.
 
-### What the AI does
+### What the AI does (when prompted, or auto-instructed)
 
 1. **Session start** — calls `get_project_context` to load your README and today's session
 2. **While working** — calls `save_knowledge` when it discovers patterns, gotchas, or architecture details
 3. **Session end** — calls `log_session` with a title, summary, files touched, discoveries, and next steps. Then `set_next_steps`
+
+### Make it automatic
+
+Add a `CLAUDE.md` (or equivalent system-prompt file for your client) at the root of any project where you want twin to load context without you asking:
+
+```md
+At the start of every session in this repo, call `mcp__twin__get_project_context`
+with this directory as `cwd` before answering. When you finish meaningful work,
+save discoveries with `mcp__twin__save_knowledge` and wrap with
+`mcp__twin__log_session`.
+```
+
+Without this hint, the agent has the tools but no schedule — it'll only call them when you ask explicitly.
 
 ### Asking your AI to use it
 
@@ -94,3 +107,6 @@ Once installed, forget about it. Your AI agent handles everything. When you star
 
 **End a session:**
 > Log this session and set next steps
+
+**Drop a stale note:**
+> Delete the brain note about the old payments flow
