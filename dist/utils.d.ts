@@ -1,0 +1,21 @@
+export declare const VAULT_PATH: string;
+export declare function resolveVault(name: string): string;
+export declare function parseFrontmatter(content: string): {
+    fm: Record<string, unknown>;
+    body: string;
+};
+export declare function projectDir(cwd: string): string;
+export declare function projectNotePath(cwd: string): string;
+export declare function brainDir(cwd: string): string;
+export declare function slugify(topic: string): string;
+export declare function sessionFilePath(cwd: string): string;
+export declare function ensureSessionFile(cwd: string): string;
+export declare function updateSection(content: string, header: string, newBody: string): string;
+export declare function toStr(v: unknown): string;
+export declare function wrap(text: string, width: number): string[];
+export declare function parseBrainSections(body: string): Record<string, string>;
+export declare function parseBrainItems(body: string): Record<string, string>;
+export declare function parseBrainCallouts(body: string, type: string): string[];
+export declare function parseBrainTasks(body: string): string[];
+export declare function parseBrainPatterns(body: string): Record<string, [string, string]>;
+export declare function mergeBrain(existing: string, newLines: string[]): string;
