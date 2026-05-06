@@ -29,9 +29,9 @@ export function logSession(params: Record<string, unknown>): string {
 
   if (diagram) { lines.push("```mermaid", diagram.trim(), "```", ""); }
 
-  if (discoveries) for (const d of discoveries) { lines.push("> [!info] Key Finding"); for (const dl of wrap(d, 100)) lines.push(`> ${dl}`); lines.push(""); }
-  if (warnings) for (const w of warnings) { lines.push("> [!warning] Watch out"); for (const wl of wrap(w, 100)) lines.push(`> ${wl}`); lines.push(""); }
-  if (tips) for (const t of tips) { lines.push("> [!tip] Best Practice"); for (const tl of wrap(t, 100)) lines.push(`> ${tl}`); lines.push(""); }
+  if (discoveries) for (const d of discoveries) { lines.push("> [!info]"); for (const dl of wrap(d, 100)) lines.push(`> ${dl}`); lines.push(""); }
+  if (warnings) for (const w of warnings) { lines.push("> [!warning]"); for (const wl of wrap(w, 100)) lines.push(`> ${wl}`); lines.push(""); }
+  if (tips) for (const t of tips) { lines.push("> [!tip]"); for (const tl of wrap(t, 100)) lines.push(`> ${tl}`); lines.push(""); }
 
   if (nextSession) { lines.push(`**Next session:** ${nextSession}`); lines.push(""); }
 

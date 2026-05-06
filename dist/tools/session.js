@@ -28,21 +28,21 @@ export function logSession(params) {
     }
     if (discoveries)
         for (const d of discoveries) {
-            lines.push("> [!info] Key Finding");
+            lines.push("> [!info]");
             for (const dl of wrap(d, 100))
                 lines.push(`> ${dl}`);
             lines.push("");
         }
     if (warnings)
         for (const w of warnings) {
-            lines.push("> [!warning] Watch out");
+            lines.push("> [!warning]");
             for (const wl of wrap(w, 100))
                 lines.push(`> ${wl}`);
             lines.push("");
         }
     if (tips)
         for (const t of tips) {
-            lines.push("> [!tip] Best Practice");
+            lines.push("> [!tip]");
             for (const tl of wrap(t, 100))
                 lines.push(`> ${tl}`);
             lines.push("");

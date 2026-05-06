@@ -27,6 +27,7 @@ export function projectDir(cwd: string): string {
   let rel: string;
   try { rel = path.relative(os.homedir(), cwd); }
   catch { rel = path.basename(cwd); }
+  if (rel.startsWith("..") || path.isAbsolute(rel)) rel = path.basename(cwd);
   return path.join(VAULT_PATH, "twin", rel);
 }
 
@@ -135,7 +136,7 @@ export function parseBrainItems(body: string): Record<string, string> {
 
 export function parseBrainCallouts(body: string, type: string): string[] {
   const callouts: string[] = [];
-  const pattern = new RegExp(`> \\[\\!${type}\\] .+?\\n(?:> .+?\\n)*`, "g");
+  const pattern = new RegExp(`> \\[\\!${type}\\].*\\n(?:> .+?\\n)*`, "g");
   for (const match of body.matchAll(pattern)) {
     const lines = match[0].split("\n").filter(l => l.startsWith("> ")).map(l => l.slice(2).trim());
     if (lines.length > 0) lines[0] = lines[0].replace(/^\[!\w+\]\s*/, "");
@@ -191,6 +192,12 @@ export function mergeBrain(existing: string, newLines: string[]): string {
 
   const newText = newLines.join("\n");
   const newSections = parseBrainSections(newText);
+  // Strip trailing block content — greedy ## parsing captures items/diagrams/callouts
+  for (const s of [oldSections, newSections]) {
+    for (const k of Object.keys(s)) {
+      s[k] = s[k].split(/\n(\| |```|> |## |\- \[.\] )/)[0];
+    }
+  }
   const newItems = parseBrainItems(newText);
   const newDiscoveries = parseBrainCallouts(newText, "info");
   const newWarnings = parseBrainCallouts(newText, "warning");
@@ -208,7 +215,10 @@ export function mergeBrain(existing: string, newLines: string[]): string {
     }
   }
 
-  const mergedSections = { ...oldSections, ...newSections };
+  const mergedSections: Record<string, string> = {};
+  for (const [k, v] of [...Object.entries(oldSections), ...Object.entries(newSections)]) {
+    if (k.toLowerCase() !== "to do") mergedSections[k] = v;
+  }
   const mergedItems = { ...oldItems, ...newItems };
   const mergedPatterns = { ...oldPatterns, ...newPatterns };
 
@@ -264,10 +274,11 @@ export function mergeBrain(existing: string, newLines: string[]): string {
   for (const [n, [l, c]] of Object.entries(mergedPatterns)) {
     result.push(`### ${n}`, "", `\`\`\`${l}`, c, "```", "");
   }
-  for (const d of mergedDiscoveries) { result.push("> [!info] Key Finding"); for (const dl of wrap(d, 100)) result.push(`> ${dl}`); result.push(""); }
-  for (const t of mergedTips) { result.push("> [!tip] Best Practice"); for (const tl of wrap(t, 100)) result.push(`> ${tl}`); result.push(""); }
-  for (const w of mergedWarnings) { result.push("> [!warning] Watch out"); for (const wl of wrap(w, 100)) result.push(`> ${wl}`); result.push(""); }
-  for (const q of mergedQuestions) { result.push("> [!question] To Investigate"); for (const ql of wrap(q, 100)) result.push(`> ${ql}`); result.push(""); }
+  const cLabels: Record<string, string> = { info: "> [!info]", tip: "> [!tip]", warning: "> [!warning]", question: "> [!question]" };
+  for (const d of mergedDiscoveries) { result.push(cLabels.info); for (const dl of wrap(d, 100)) result.push(`> ${dl}`); result.push(""); }
+  for (const t of mergedTips) { result.push(cLabels.tip); for (const tl of wrap(t, 100)) result.push(`> ${tl}`); result.push(""); }
+  for (const w of mergedWarnings) { result.push(cLabels.warning); for (const wl of wrap(w, 100)) result.push(`> ${wl}`); result.push(""); }
+  for (const q of mergedQuestions) { result.push(cLabels.question); for (const ql of wrap(q, 100)) result.push(`> ${ql}`); result.push(""); }
   if (mergedTasks.length) {
     result.push("## To Do", "");
     for (const t of mergedTasks) result.push(`- [ ] ${t}`);

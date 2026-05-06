@@ -42,10 +42,10 @@ export function saveKnowledge(params: Record<string, unknown>): string {
     lines.push(`\`\`\`${l}`, c, "```", "");
   }
 
-  if (discoveries) for (const d of discoveries) { lines.push("> [!info] Key Finding"); for (const dl of wrap(d, 100)) lines.push(`> ${dl}`); lines.push(""); }
-  if (tips) for (const t of tips) { lines.push("> [!tip] Best Practice"); for (const tl of wrap(t, 100)) lines.push(`> ${tl}`); lines.push(""); }
-  if (warnings) for (const w of warnings) { lines.push("> [!warning] Watch out"); for (const wl of wrap(w, 100)) lines.push(`> ${wl}`); lines.push(""); }
-  if (questions) for (const q of questions) { lines.push("> [!question] To Investigate"); for (const ql of wrap(q, 100)) lines.push(`> ${ql}`); lines.push(""); }
+  if (discoveries) for (const d of discoveries) { lines.push("> [!info]"); for (const dl of wrap(d, 100)) lines.push(`> ${dl}`); lines.push(""); }
+  if (tips) for (const t of tips) { lines.push("> [!tip]"); for (const tl of wrap(t, 100)) lines.push(`> ${tl}`); lines.push(""); }
+  if (warnings) for (const w of warnings) { lines.push("> [!warning]"); for (const wl of wrap(w, 100)) lines.push(`> ${wl}`); lines.push(""); }
+  if (questions) for (const q of questions) { lines.push("> [!question]"); for (const ql of wrap(q, 100)) lines.push(`> ${ql}`); lines.push(""); }
 
   if (tasks?.length) {
     lines.push("## To Do", "");
