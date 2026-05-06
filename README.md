@@ -13,6 +13,7 @@ Finds your vault, picks where to install, done.
 | App | How |
 |-----|-----|
 | Claude Desktop | Auto-configured by setup |
+| Claude Code (CLI) | Manual config below |
 | Cursor | Auto-configured by setup |
 | pi | Auto-configured by setup. Needs `OBSIDIAN_VAULT` env var |
 | Windsurf | Manual config below |
@@ -37,6 +38,7 @@ If setup can't find your app, add this to its MCP config JSON:
 | App | Config file |
 |-----|-------------|
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows)<br>`~/.config/Claude/claude_desktop_config.json` (Linux) |
+| Claude Code (CLI) | `~/.claude.json` |
 | Cursor | `.cursor/mcp.json` in your project |
 | Windsurf | `~/.codeium/windsurf/mcp.json` |
 | Continue (VS Code) | `~/.continue/config.json` under `experimental.mcpServers` |
