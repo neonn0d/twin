@@ -165,50 +165,57 @@ async function main() {
         }
     }
     console.log(`\nVault: ${vaultPath}\n`);
-    const targets = ["Claude Desktop", "Cursor", ...(fs.existsSync(path.join(homedir, ".pi")) ? ["pi"] : [])];
-    const selected = await picker("Where to configure twin?", targets);
-    if (selected.has(0)) {
-        const claudePaths = [
-            path.join(homedir, "Library", "Application Support", "Claude", "claude_desktop_config.json"),
-            path.join(process.env.APPDATA || "", "Claude", "claude_desktop_config.json"),
-            path.join(homedir, ".config", "Claude", "claude_desktop_config.json"),
-        ];
-        const p = claudePaths.find(p => fs.existsSync(p)) || claudePaths[0];
-        console.log(writeMCPConfig(p, vaultPath) ? "Claude Desktop  ok" : "Claude Desktop  failed");
+    const apps = [];
+    // Claude Desktop
+    const claudeDesktopPaths = [
+        path.join(homedir, "Library", "Application Support", "Claude", "claude_desktop_config.json"),
+        path.join(process.env.APPDATA || "", "Claude", "claude_desktop_config.json"),
+        path.join(homedir, ".config", "Claude", "claude_desktop_config.json"),
+    ];
+    const claudeDesktop = claudeDesktopPaths.find(p => fs.existsSync(p)) || claudeDesktopPaths[0];
+    apps.push({ name: "Claude Desktop", configure: () => console.log(writeMCPConfig(claudeDesktop, vaultPath) ? "Claude Desktop  ok" : "Claude Desktop  failed") });
+    // Claude Code
+    const claudeCodePath = path.join(homedir, ".claude.json");
+    apps.push({ name: "Claude Code (CLI)", configure: () => console.log(writeMCPConfig(claudeCodePath, vaultPath) ? "Claude Code  ok" : "Claude Code  failed") });
+    // Cursor
+    apps.push({ name: "Cursor", configure: () => {
+            const p = path.join(process.cwd(), ".cursor", "mcp.json");
+            console.log(writeMCPConfig(p, vaultPath) ? "Cursor  ok" : "Cursor  failed");
+        } });
+    // pi
+    if (fs.existsSync(path.join(homedir, ".pi"))) {
+        apps.push({ name: "pi", configure: () => {
+                const piSettings = path.join(homedir, ".pi", "agent", "settings.json");
+                try {
+                    let cfg = {};
+                    if (fs.existsSync(piSettings))
+                        cfg = JSON.parse(fs.readFileSync(piSettings, "utf8"));
+                    if (!cfg.packages)
+                        cfg.packages = [];
+                    if (!cfg.packages.includes("npm:@neonn0d/twin")) {
+                        cfg.packages.push("npm:@neonn0d/twin");
+                        fs.mkdirSync(path.dirname(piSettings), { recursive: true });
+                        fs.writeFileSync(piSettings, JSON.stringify(cfg, null, 2));
+                        console.log("pi  ok");
+                    }
+                    else
+                        console.log("pi  already configured");
+                }
+                catch {
+                    console.log("pi  failed");
+                }
+                const isWin = process.platform === "win32";
+                if (isWin)
+                    console.log(`\n  ⚠  Set before running pi:\n  setx OBSIDIAN_VAULT "${vaultPath}"`);
+                else {
+                    const rc = process.env.SHELL?.includes("zsh") ? ".zshrc" : ".bashrc";
+                    console.log(`\n  ⚠  Add to ~/${rc}:\n  export OBSIDIAN_VAULT="${vaultPath}"`);
+                }
+            } });
     }
-    if (selected.has(1)) {
-        const p = path.join(process.cwd(), ".cursor", "mcp.json");
-        console.log(writeMCPConfig(p, vaultPath) ? "Cursor  ok" : "Cursor  failed");
-    }
-    if (selected.has(2)) {
-        const piSettings = path.join(homedir, ".pi", "agent", "settings.json");
-        try {
-            let cfg = {};
-            if (fs.existsSync(piSettings))
-                cfg = JSON.parse(fs.readFileSync(piSettings, "utf8"));
-            if (!cfg.packages)
-                cfg.packages = [];
-            if (!cfg.packages.includes("npm:@neonn0d/twin")) {
-                cfg.packages.push("npm:@neonn0d/twin");
-                fs.mkdirSync(path.dirname(piSettings), { recursive: true });
-                fs.writeFileSync(piSettings, JSON.stringify(cfg, null, 2));
-                console.log("pi  ok");
-            }
-            else
-                console.log("pi  already configured");
-        }
-        catch {
-            console.log("pi  failed");
-        }
-        const isWin = process.platform === "win32";
-        if (isWin) {
-            console.log(`\n  ⚠  Set env var before running pi:\n  setx OBSIDIAN_VAULT "${vaultPath}"`);
-        }
-        else {
-            const rc = process.env.SHELL?.includes("zsh") ? ".zshrc" : ".bashrc";
-            console.log(`\n  ⚠  Add to ~/${rc}:\n  export OBSIDIAN_VAULT="${vaultPath}"`);
-        }
-    }
+    const selected = await picker("Where to configure twin?", apps.map(a => a.name));
+    for (const i of selected)
+        apps[i].configure();
     console.log("\nDone.");
 }
 main();
