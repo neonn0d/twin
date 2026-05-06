@@ -8,7 +8,7 @@ export function deleteKnowledge(params: Record<string, unknown>): string {
   const slug = slugify(topic);
   const brain = brainDir(cwd);
   const p = path.join(brain, `${slug}.md`);
-  if (!fs.existsSync(p)) return `No brain note for '${topic}'`;
+  if (!fs.existsSync(p)) return `No brain note for '${topic}' (looked in ${path.relative(VAULT_PATH, p)})`;
   const trash = path.join(brain, ".trash");
   fs.mkdirSync(trash, { recursive: true });
   fs.renameSync(p, path.join(trash, `${slug}.md`));
@@ -87,7 +87,7 @@ export function getKnowledge(params: Record<string, unknown>): string {
   if (!topic) return listKnowledge(params);
   const slug = slugify(topic);
   const p = path.join(brainDir(cwd), `${slug}.md`);
-  if (!fs.existsSync(p)) return `No brain note for '${topic}'`;
+  if (!fs.existsSync(p)) return `No brain note for '${topic}' (looked in ${path.relative(VAULT_PATH, p)})`;
   return fs.readFileSync(p, "utf8");
 }
 
