@@ -94,7 +94,3 @@ Once installed, forget about it. Your AI agent handles everything. When you star
 
 **End a session:**
 > Log this session and set next steps
-
-### Migrating from /twinit and /save
-
-If you used the Python twin MCP before, same tools, same vault structure. Your old brain notes and sessions still work.
