@@ -3,58 +3,64 @@
 MCP server for AI memory in an Obsidian vault.
 
 ```
-npx @neonn0d/twin --setup
+npx @neonn0d/twin@latest --setup
 ```
 
-One command. Finds your vault, configure from a list.
+Finds your vault, picks where to install, done.
 
-## Manual setup
+## Supported clients
 
-Claude Desktop:
+| App | How |
+|-----|-----|
+| Claude Desktop | Auto-configured by setup |
+| Cursor | Auto-configured by setup |
+| pi | Auto-configured by setup. Needs `OBSIDIAN_VAULT` env var |
+| Windsurf | Manual config below |
+| Any MCP client | Manual config below |
+
+## Manual config
+
+If setup can't find your app, add this to its MCP config JSON:
 
 ```json
 {
   "mcpServers": {
     "twin": {
       "command": "npx",
-      "args": ["-y", "@neonn0d/twin"],
-      "env": { "OBSIDIAN_VAULT": "/home/you/Documents/Vault" }
+      "args": ["-y", "@neonn0d/twin@latest"],
+      "env": { "OBSIDIAN_VAULT": "/path/to/your/vault" }
     }
   }
 }
 ```
 
-Cursor (`.cursor/mcp.json`):
+| App | Config file |
+|-----|-------------|
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows)<br>`~/.config/Claude/claude_desktop_config.json` (Linux) |
+| Cursor | `.cursor/mcp.json` in your project |
+| Windsurf | `~/.codeium/windsurf/mcp.json` |
+| Continue (VS Code) | `~/.continue/config.json` under `experimental.mcpServers` |
+| pi | `pi install npm:@neonn0d/twin` then add `export OBSIDIAN_VAULT=/path/to/vault` to your shell config (`.zshrc` / `.bashrc` on macOS/Linux, `setx` on Windows) |
+| Goose | `~/.config/goose/mcp.json` |
+| Any stdio MCP | Same JSON format, `command: "npx"` |
 
-```json
-{
-  "mcpServers": {
-    "twin": {
-      "command": "npx",
-      "args": ["-y", "@neonn0d/twin"],
-      "env": { "OBSIDIAN_VAULT": "/home/you/Documents/Vault" }
-    }
-  }
-}
-```
-
-Also a pi extension: `pi install npm:@neonn0d/twin`
+Restart the app after saving.
 
 ## Tools
 
-Project memory: `log_session`, `save_knowledge`, `get_knowledge`, `search_knowledge`, `list_knowledge`, `get_project_context`, `set_project_context`, `set_next_steps`, `update_progress`
+**Project memory:** `log_session`, `save_knowledge`, `get_knowledge`, `search_knowledge`, `list_knowledge`, `get_project_context`, `set_project_context`, `set_next_steps`, `update_progress`
 
-General vault: `list_notes`, `read_note`, `create_note`, `edit_note`, `append_to_note`, `search_notes`, `daily_note`, `list_tags`, `list_folders`, `move_note`, `note_info`, `delete_note`
+**General vault:** `list_notes`, `read_note`, `create_note`, `edit_note`, `append_to_note`, `search_notes`, `daily_note`, `list_tags`, `list_folders`, `move_note`, `note_info`, `delete_note`
 
-## Vault layout
+## Vault structure
 
 ```
 vault/
   twin/
     path/to/project/
       README.md
-      brain/          <-- topic notes, auto-merge
-      sessions/       <-- daily session logs
+      brain/          topic notes, auto-merge
+      sessions/       daily session logs
 ```
 
 ## Merging

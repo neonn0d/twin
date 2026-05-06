@@ -70,7 +70,7 @@ function findObsidianVaults() {
     return [];
 }
 function serverConfig(vaultPath) {
-    return { command: "npx", args: ["-y", "@neonn0d/twin"], env: { OBSIDIAN_VAULT: vaultPath } };
+    return { command: "npx", args: ["-y", "@neonn0d/twin@latest"], env: { OBSIDIAN_VAULT: vaultPath } };
 }
 function writeMCPConfig(filepath, vaultPath) {
     try {
@@ -128,7 +128,7 @@ async function picker(title, items) {
 }
 async function main() {
     console.log("\x1b[2J\x1b[H"); // clear
-    console.log("twin setup\n");
+    console.log("twin setup\n\nnpx @neonn0d/twin@latest --setup");
     let vaultPath = process.env.OBSIDIAN_VAULT || "";
     if (!vaultPath) {
         const vaults = findObsidianVaults();
