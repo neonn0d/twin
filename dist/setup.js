@@ -91,6 +91,28 @@ async function main() {
     // Cursor
     const cursorPath = path.join(process.cwd(), ".cursor", "mcp.json");
     console.log(writeConfig(cursorPath, vaultPath) ? `Cursor  ok (${cursorPath})` : `Cursor  failed`);
+    // pi
+    const piSettings = path.join(homedir, ".pi", "agent", "settings.json");
+    if (fs.existsSync(path.join(homedir, ".pi"))) {
+        try {
+            let cfg = {};
+            if (fs.existsSync(piSettings))
+                cfg = JSON.parse(fs.readFileSync(piSettings, "utf8"));
+            if (!cfg.packages)
+                cfg.packages = [];
+            if (!cfg.packages.includes("npm:@neonn0d/twin")) {
+                cfg.packages.push("npm:@neonn0d/twin");
+                fs.mkdirSync(path.dirname(piSettings), { recursive: true });
+                fs.writeFileSync(piSettings, JSON.stringify(cfg, null, 2));
+                console.log(`pi  ok (${piSettings})`);
+            }
+            else
+                console.log("pi  already configured");
+        }
+        catch {
+            console.log("pi  failed");
+        }
+    }
     console.log("\nDone. Restart Claude Desktop / Cursor.");
 }
 main();
