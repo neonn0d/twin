@@ -200,6 +200,14 @@ async function main() {
         catch {
             console.log("pi  failed");
         }
+        const isWin = process.platform === "win32";
+        if (isWin) {
+            console.log(`\n  ⚠  Set env var before running pi:\n  setx OBSIDIAN_VAULT "${vaultPath}"`);
+        }
+        else {
+            const rc = process.env.SHELL?.includes("zsh") ? ".zshrc" : ".bashrc";
+            console.log(`\n  ⚠  Add to ~/${rc}:\n  export OBSIDIAN_VAULT="${vaultPath}"`);
+        }
     }
     console.log("\nDone.");
 }
