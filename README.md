@@ -38,7 +38,7 @@ If setup can't find your app, add this to its MCP config JSON:
 | App | Config file |
 |-----|-------------|
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows)<br>`~/.config/Claude/claude_desktop_config.json` (Linux) |
-| Claude Code (CLI) | `~/.claude.json` |
+| Claude Code (CLI) | `~/.claude/mcp.json` |
 | Cursor | `.cursor/mcp.json` in your project |
 | Windsurf | `~/.codeium/windsurf/mcp.json` |
 | Continue (VS Code) | `~/.continue/config.json` under `experimental.mcpServers` |

@@ -2,7 +2,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { execSync } from "node:child_process";
 const homedir = os.homedir();
+function exists(p) { try {
+    return fs.existsSync(p);
+}
+catch {
+    return false;
+} }
+function isMac() { return process.platform === "darwin"; }
+function isWin() { return process.platform === "win32"; }
 function readKey() {
     if (!process.stdin.isTTY)
         return readLine();
@@ -63,7 +72,7 @@ function findObsidianVaults() {
     for (const p of cfgPaths) {
         try {
             const cfg = JSON.parse(fs.readFileSync(p, "utf8"));
-            return Object.values(cfg.vaults || {}).map((v) => v.path).filter((p) => fs.existsSync(p));
+            return Object.values(cfg.vaults || {}).map((v) => v.path).filter((p) => exists(p));
         }
         catch { }
     }
@@ -76,7 +85,7 @@ function writeMCPConfig(filepath, vaultPath) {
     try {
         fs.mkdirSync(path.dirname(filepath), { recursive: true });
         let config = {};
-        if (fs.existsSync(filepath)) {
+        if (exists(filepath)) {
             try {
                 config = JSON.parse(fs.readFileSync(filepath, "utf8"));
             }
@@ -96,7 +105,7 @@ async function picker(title, items) {
     const selected = new Set(items.map((_, i) => i));
     let cursor = 0;
     function draw() {
-        process.stdout.write("\x1b[2J\x1b[H"); // clear
+        process.stdout.write("\x1b[2J\x1b[H");
         console.log(`${title}\n`);
         items.forEach((item, i) => {
             const mark = selected.has(i) ? "\x1b[32m\u2713\x1b[0m" : " ";
@@ -126,9 +135,18 @@ async function picker(title, items) {
     }
     return selected;
 }
+function hasCommand(cmd) {
+    try {
+        execSync(`which "${cmd}"`, { stdio: "pipe" });
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
 async function main() {
-    console.log("\x1b[2J\x1b[H"); // clear
-    console.log("twin setup\n\nnpx @neonn0d/twin@latest --setup");
+    console.log("\x1b[2J\x1b[H");
+    console.log("twin setup\n");
     let vaultPath = process.env.OBSIDIAN_VAULT || "";
     if (!vaultPath) {
         const vaults = findObsidianVaults();
@@ -158,7 +176,7 @@ async function main() {
         if (!vaultPath) {
             process.stdout.write("Vault path: ");
             vaultPath = await readLine();
-            if (!fs.existsSync(vaultPath)) {
+            if (!exists(vaultPath)) {
                 console.log(`Not found: ${vaultPath}`);
                 process.exit(1);
             }
@@ -167,28 +185,38 @@ async function main() {
     console.log(`\nVault: ${vaultPath}\n`);
     const apps = [];
     // Claude Desktop
-    const claudeDesktopPaths = [
-        path.join(homedir, "Library", "Application Support", "Claude", "claude_desktop_config.json"),
-        path.join(process.env.APPDATA || "", "Claude", "claude_desktop_config.json"),
-        path.join(homedir, ".config", "Claude", "claude_desktop_config.json"),
-    ];
-    const claudeDesktop = claudeDesktopPaths.find(p => fs.existsSync(p)) || claudeDesktopPaths[0];
-    apps.push({ name: "Claude Desktop", configure: () => console.log(writeMCPConfig(claudeDesktop, vaultPath) ? "Claude Desktop  ok" : "Claude Desktop  failed") });
+    if (isMac() && exists(path.join(homedir, "Library", "Application Support", "Claude"))) {
+        const p = path.join(homedir, "Library", "Application Support", "Claude", "claude_desktop_config.json");
+        apps.push({ name: "Claude Desktop", configure: () => console.log(writeMCPConfig(p, vaultPath) ? "Claude Desktop  ok" : "Claude Desktop  failed") });
+    }
+    if (isWin() && exists(path.join(process.env.APPDATA || "", "Claude"))) {
+        const p = path.join(process.env.APPDATA || "", "Claude", "claude_desktop_config.json");
+        apps.push({ name: "Claude Desktop", configure: () => console.log(writeMCPConfig(p, vaultPath) ? "Claude Desktop  ok" : "Claude Desktop  failed") });
+    }
     // Claude Code
-    const claudeCodePath = path.join(homedir, ".claude.json");
-    apps.push({ name: "Claude Code (CLI)", configure: () => console.log(writeMCPConfig(claudeCodePath, vaultPath) ? "Claude Code  ok" : "Claude Code  failed") });
+    if (hasCommand("claude")) {
+        const p = path.join(homedir, ".claude", "mcp.json");
+        apps.push({ name: "Claude Code (CLI)", configure: () => console.log(writeMCPConfig(p, vaultPath) ? "Claude Code  ok" : "Claude Code  failed") });
+    }
     // Cursor
-    apps.push({ name: "Cursor", configure: () => {
-            const p = path.join(process.cwd(), ".cursor", "mcp.json");
-            console.log(writeMCPConfig(p, vaultPath) ? "Cursor  ok" : "Cursor  failed");
-        } });
+    if (hasCommand("cursor") || exists(path.join(homedir, ".cursor"))) {
+        apps.push({ name: "Cursor", configure: () => {
+                const p = path.join(process.cwd(), ".cursor", "mcp.json");
+                console.log(writeMCPConfig(p, vaultPath) ? "Cursor  ok" : "Cursor  failed");
+            } });
+    }
+    // Windsurf
+    if (exists(path.join(homedir, ".codeium", "windsurf")) || exists(path.join(homedir, ".windsurf"))) {
+        const p = path.join(homedir, ".codeium", "windsurf", "mcp.json");
+        apps.push({ name: "Windsurf", configure: () => console.log(writeMCPConfig(p, vaultPath) ? "Windsurf  ok" : "Windsurf  failed") });
+    }
     // pi
-    if (fs.existsSync(path.join(homedir, ".pi"))) {
+    if (exists(path.join(homedir, ".pi"))) {
         apps.push({ name: "pi", configure: () => {
                 const piSettings = path.join(homedir, ".pi", "agent", "settings.json");
                 try {
                     let cfg = {};
-                    if (fs.existsSync(piSettings))
+                    if (exists(piSettings))
                         cfg = JSON.parse(fs.readFileSync(piSettings, "utf8"));
                     if (!cfg.packages)
                         cfg.packages = [];
@@ -204,14 +232,24 @@ async function main() {
                 catch {
                     console.log("pi  failed");
                 }
-                const isWin = process.platform === "win32";
-                if (isWin)
+                if (isWin())
                     console.log(`\n  ⚠  Set before running pi:\n  setx OBSIDIAN_VAULT "${vaultPath}"`);
                 else {
                     const rc = process.env.SHELL?.includes("zsh") ? ".zshrc" : ".bashrc";
                     console.log(`\n  ⚠  Add to ~/${rc}:\n  export OBSIDIAN_VAULT="${vaultPath}"`);
                 }
             } });
+    }
+    // Goose
+    if (exists(path.join(homedir, ".config", "goose"))) {
+        const p = path.join(homedir, ".config", "goose", "mcp.json");
+        apps.push({ name: "Goose", configure: () => console.log(writeMCPConfig(p, vaultPath) ? "Goose  ok" : "Goose  failed") });
+    }
+    if (apps.length === 0) {
+        console.log("No supported apps detected. Add twin manually to your MCP config:\n");
+        console.log(JSON.stringify({ mcpServers: { twin: serverConfig(vaultPath) } }, null, 2));
+        console.log(`\nOBSIDIAN_VAULT=${vaultPath}`);
+        process.exit(0);
     }
     const selected = await picker("Where to configure twin?", apps.map(a => a.name));
     for (const i of selected)
