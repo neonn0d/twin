@@ -68,3 +68,31 @@ vault/
 `save_knowledge` never overwrites. New sections replace old ones for the same heading. Items, discoveries, warnings, tips, questions, and tasks are appended and deduplicated. Diagrams are replaced if a new one is given.
 
 MIT
+
+## Using twin
+
+Once installed, forget about it. Your AI agent handles everything. When you start a session, it loads your project context from the vault. When you finish, it saves what happened.
+
+### What the AI does
+
+1. **Session start** — calls `get_project_context` to load your README and today's session
+2. **While working** — calls `save_knowledge` when it discovers patterns, gotchas, or architecture details
+3. **Session end** — calls `log_session` with a title, summary, files touched, discoveries, and next steps. Then `set_next_steps`
+
+### Asking your AI to use it
+
+**Start a project:**
+> Load my project context and tell me where we left off
+
+**Save something useful:**
+> Save a brain note about the auth flow we just built
+
+**Find past knowledge:**
+> Search brain notes for anything about the database schema
+
+**End a session:**
+> Log this session and set next steps
+
+### Migrating from /twinit and /save
+
+If you used the Python twin MCP before, same tools, same vault structure. Your old brain notes and sessions still work.
