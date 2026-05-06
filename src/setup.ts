@@ -6,6 +6,7 @@ import os from "node:os";
 const homedir = os.homedir();
 
 function readKey(): Promise<string> {
+  if (!process.stdin.isTTY) return readLine();
   return new Promise(resolve => {
     process.stdin.setRawMode(true);
     process.stdin.resume();
@@ -14,6 +15,12 @@ function readKey(): Promise<string> {
 }
 
 async function readLine(): Promise<string> {
+  if (!process.stdin.isTTY) {
+    return new Promise(resolve => {
+      process.stdin.resume();
+      process.stdin.once("data", d => { process.stdin.pause(); resolve(d.toString().trim()); });
+    });
+  }
   let val = "";
   process.stdin.setRawMode(true);
   process.stdin.resume();

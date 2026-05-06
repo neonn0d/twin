@@ -3,12 +3,12 @@
 MCP server for AI memory in an Obsidian vault.
 
 ```
-npm install -g @neonn0d/twin
+npx @neonn0d/twin --setup
 ```
 
-Needs Node 18+, an Obsidian vault, and `OBSIDIAN_VAULT` env var set.
+One command. Finds your vault, configure from a list.
 
-## Setup
+## Manual setup
 
 Claude Desktop:
 

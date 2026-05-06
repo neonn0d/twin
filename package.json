@@ -1,10 +1,10 @@
 {
   "name": "@neonn0d/twin",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "MCP server for AI memory in an Obsidian vault",
   "type": "module",
   "main": "dist/index.js",
-  "bin": { "twin-mcp": "./dist/index.js", "twin-setup": "./dist/setup.js" },
+  "bin": { "twin": "./dist/cli.js" },
   "files": ["dist"],
   "scripts": {
     "build": "tsc",

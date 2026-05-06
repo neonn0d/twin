@@ -4,6 +4,8 @@ import path from "node:path";
 import os from "node:os";
 const homedir = os.homedir();
 function readKey() {
+    if (!process.stdin.isTTY)
+        return readLine();
     return new Promise(resolve => {
         process.stdin.setRawMode(true);
         process.stdin.resume();
@@ -11,6 +13,12 @@ function readKey() {
     });
 }
 async function readLine() {
+    if (!process.stdin.isTTY) {
+        return new Promise(resolve => {
+            process.stdin.resume();
+            process.stdin.once("data", d => { process.stdin.pause(); resolve(d.toString().trim()); });
+        });
+    }
     let val = "";
     process.stdin.setRawMode(true);
     process.stdin.resume();
