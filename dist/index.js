@@ -5,7 +5,6 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { saveKnowledge, getKnowledge, listKnowledge, searchKnowledge, deleteKnowledge } from "./tools/brain.js";
 import { logSession, updateProgress, sessionStart, sessionEnd } from "./tools/session.js";
 import { getProjectContext, setProjectContext, setNextSteps } from "./tools/project.js";
-import { listNotes, readNote, createNote, editNote, appendToNote, searchNotes, dailyNote, listTags, listFolders, moveNote, noteInfo, deleteNote } from "./tools/vault.js";
 const server = new Server({ name: "twin", version: "0.1.0" }, { capabilities: { tools: {} } });
 const tools = [
     { name: "get_project_context", description: "Get project README and today's session file", inputSchema: { type: "object", properties: { cwd: { type: "string" } }, required: ["cwd"] } },
@@ -20,18 +19,6 @@ const tools = [
     { name: "delete_knowledge", description: "Move a brain note to brain/.trash/", inputSchema: { type: "object", properties: { cwd: { type: "string" }, topic: { type: "string" } }, required: ["cwd", "topic"] } },
     { name: "set_next_steps", description: "Update README next steps", inputSchema: { type: "object", properties: { cwd: { type: "string" }, steps: { type: "string" } }, required: ["cwd", "steps"] } },
     { name: "set_project_context", description: "Update README context section", inputSchema: { type: "object", properties: { cwd: { type: "string" }, context: { type: "string" } }, required: ["cwd", "context"] } },
-    { name: "list_notes", description: "List notes by folder or tag", inputSchema: { type: "object", properties: { folder: { type: "string" }, tag: { type: "string" } } } },
-    { name: "read_note", description: "Read full note content", inputSchema: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } },
-    { name: "create_note", description: "Create a note, fails if exists", inputSchema: { type: "object", properties: { name: { type: "string" }, content: { type: "string" }, tags: { type: "array" } }, required: ["name", "content"] } },
-    { name: "edit_note", description: "Replace entire note content", inputSchema: { type: "object", properties: { name: { type: "string" }, content: { type: "string" } }, required: ["name", "content"] } },
-    { name: "append_to_note", description: "Append text to a note", inputSchema: { type: "object", properties: { name: { type: "string" }, text: { type: "string" } }, required: ["name", "text"] } },
-    { name: "search_notes", description: "Regex search across all notes", inputSchema: { type: "object", properties: { query: { type: "string" }, case_sensitive: { type: "boolean" } }, required: ["query"] } },
-    { name: "daily_note", description: "Get or create today's daily note", inputSchema: { type: "object", properties: { content: { type: "string" } } } },
-    { name: "list_tags", description: "All tags with usage counts", inputSchema: { type: "object", properties: {} } },
-    { name: "list_folders", description: "Vault folder structure", inputSchema: { type: "object", properties: {} } },
-    { name: "move_note", description: "Move or rename a note", inputSchema: { type: "object", properties: { source: { type: "string" }, destination: { type: "string" } }, required: ["source", "destination"] } },
-    { name: "note_info", description: "Note tags, links, line count", inputSchema: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } },
-    { name: "delete_note", description: "Move note to .trash/", inputSchema: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } },
 ];
 server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -42,10 +29,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         session_start: sessionStart, session_end: sessionEnd, save_knowledge: saveKnowledge,
         get_knowledge: getKnowledge, list_knowledge: listKnowledge, search_knowledge: searchKnowledge, delete_knowledge: deleteKnowledge,
         set_next_steps: setNextSteps, set_project_context: setProjectContext,
-        list_notes: listNotes, read_note: readNote, create_note: createNote, edit_note: editNote,
-        append_to_note: appendToNote, search_notes: searchNotes, daily_note: dailyNote,
-        list_tags: () => listTags(), list_folders: () => listFolders(),
-        move_note: moveNote, note_info: noteInfo, delete_note: deleteNote,
     };
     const fn = h[name];
     if (!fn)

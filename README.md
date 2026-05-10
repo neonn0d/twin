@@ -50,9 +50,7 @@ Restart the app after saving.
 
 ## Tools
 
-**Project memory:** `log_session`, `save_knowledge`, `get_knowledge`, `search_knowledge`, `list_knowledge`, `delete_knowledge`, `get_project_context`, `set_project_context`, `set_next_steps`, `update_progress`
-
-**General vault:** `list_notes`, `read_note`, `create_note`, `edit_note`, `append_to_note`, `search_notes`, `daily_note`, `list_tags`, `list_folders`, `move_note`, `note_info`, `delete_note`
+**Project memory:** `get_project_context`, `session_start`, `session_end`, `log_session`, `update_progress`, `save_knowledge`, `get_knowledge`, `list_knowledge`, `search_knowledge`, `delete_knowledge`, `set_project_context`, `set_next_steps`
 
 ## Vault structure
 
