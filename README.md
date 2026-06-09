@@ -1,4 +1,5 @@
 # twin
+<img width="1254" height="1254" alt="ChatGPT Image Jun 9, 2026, 05_46_59 PM" src="https://github.com/user-attachments/assets/df5e7674-0be4-4415-9b7e-a9a1550333d3" />
 
 MCP server for AI memory in an Obsidian vault.
 
