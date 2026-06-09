@@ -2,51 +2,121 @@
 
 MCP server for AI memory in an Obsidian vault.
 
+> Not published to npm. Install from source (recommended) or run straight from
+> GitHub with `npx`. `dist/` is committed, so there's no build step either way.
+
+## Install
+
+### From source (recommended — offline, pinned to your checkout)
+
 ```
-npx @neonn0d/twin@latest --setup
+git clone https://github.com/neonn0d/twin
+cd twin
+npm install
 ```
 
-Finds your vault, picks where to install, done.
+`dist/` is already built and committed, so you don't need to run `npm run build`
+unless you change the source. Then either run the wizard:
+
+```
+node dist/cli.js --setup
+```
+
+…which auto-configures detected clients with the absolute path to this checkout,
+or add the config manually (see [Manual config](#manual-config)).
+
+### Quick (no clone — runs from GitHub each launch)
+
+```
+npx github:neonn0d/twin --setup
+```
+
+Needs `git` + network on first run; npx caches it afterward. Configures clients
+to launch via `npx github:neonn0d/twin`.
 
 ## Supported clients
 
 | App | How |
 |-----|-----|
+| Claude Code (CLI) | `claude mcp add` (below), or auto-configured by setup |
 | Claude Desktop | Auto-configured by setup |
-| Claude Code (CLI) | Manual config below |
 | Cursor | Auto-configured by setup |
+| Windsurf | Auto-configured by setup |
+| Goose | Auto-configured by setup |
 | pi | Auto-configured by setup. Needs `OBSIDIAN_VAULT` env var |
-| Windsurf | Manual config below |
 | Any MCP client | Manual config below |
 
 ## Manual config
 
-If setup can't find your app, add this to its MCP config JSON:
+Pick the command that matches how you installed.
+
+**From source** — point `node` at the absolute path of `dist/index.js` in your clone:
 
 ```json
 {
   "mcpServers": {
     "twin": {
-      "command": "npx",
-      "args": ["-y", "@neonn0d/twin@latest"],
+      "command": "node",
+      "args": ["/absolute/path/to/twin/dist/index.js"],
       "env": { "OBSIDIAN_VAULT": "/path/to/your/vault" }
     }
   }
 }
 ```
 
+**From GitHub** — let npx fetch and run it:
+
+```json
+{
+  "mcpServers": {
+    "twin": {
+      "command": "npx",
+      "args": ["-y", "github:neonn0d/twin"],
+      "env": { "OBSIDIAN_VAULT": "/path/to/your/vault" }
+    }
+  }
+}
+```
+
+### Claude Code (CLI)
+
+The cleanest route — register it with the CLI (from-source form shown):
+
+```
+claude mcp add twin -e OBSIDIAN_VAULT=/path/to/your/vault \
+  -- node /absolute/path/to/twin/dist/index.js
+```
+
+Or the GitHub form: `-- npx -y github:neonn0d/twin`.
+
+### Config file locations
+
 | App | Config file |
 |-----|-------------|
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows)<br>`~/.config/Claude/claude_desktop_config.json` (Linux) |
-| Claude Code (CLI) | `~/.claude/mcp.json` |
 | Cursor | `.cursor/mcp.json` in your project |
 | Windsurf | `~/.codeium/windsurf/mcp.json` |
 | Continue (VS Code) | `~/.continue/config.json` under `experimental.mcpServers` |
-| pi | `pi install npm:@neonn0d/twin` then add `export OBSIDIAN_VAULT=/path/to/vault` to your shell config (`.zshrc` / `.bashrc` on macOS/Linux, `setx` on Windows) |
+| pi | Add `github:neonn0d/twin` to `packages` in `~/.pi/agent/settings.json`, then `export OBSIDIAN_VAULT=/path/to/vault` in your shell config (`.zshrc` / `.bashrc`, or `setx` on Windows) |
 | Goose | `~/.config/goose/mcp.json` |
-| Any stdio MCP | Same JSON format, `command: "npx"` |
+| Any stdio MCP | Same JSON format |
 
 Restart the app after saving.
+
+## Platform support
+
+Works on **macOS, Linux, WSL, and Windows** — it's plain Node, no native deps.
+
+- **macOS / Linux / WSL** — fully supported, this is the common path.
+- **WSL** — run twin and your AI client on the same side. If the client is the
+  Windows app and the vault lives in WSL (or vice-versa), point `OBSIDIAN_VAULT`
+  at a path that side can actually see (e.g. `/mnt/c/Users/you/vault` from WSL,
+  or `\\wsl$\...` from Windows). Mixing sides is the only real gotcha.
+- **Windows (native)** — works. Use `node` + a full path, or `npx`. Setup detects
+  Claude Desktop via `%APPDATA%`.
+
+Requires Node 18+ (ESM). Obsidian itself is optional — twin only needs the vault
+folder to exist; you don't have to run the Obsidian app.
 
 ## Tools
 

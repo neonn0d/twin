@@ -3,8 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const homedir = os.homedir();
+
+// Where this build lives. If we're running from a real clone, point clients at
+// node + the absolute dist/index.js (offline, pinned to this checkout). If we're
+// running ephemerally via `npx github:...`, that path is a throwaway cache dir,
+// so fall back to the npx-from-GitHub command instead.
+const selfDir = path.dirname(fileURLToPath(import.meta.url));
+const indexPath = path.join(selfDir, "index.js");
+const isEphemeral = selfDir.includes(`${path.sep}_npx${path.sep}`) || selfDir.includes(`${path.sep}node_modules${path.sep}`);
 
 function exists(p: string): boolean { try { return fs.existsSync(p); } catch { return false; } }
 function isMac() { return process.platform === "darwin"; }
@@ -59,7 +68,10 @@ function findObsidianVaults(): string[] {
 }
 
 function serverConfig(vaultPath: string) {
-  return { command: "npx", args: ["-y", "@neonn0d/twin@latest"], env: { OBSIDIAN_VAULT: vaultPath } };
+  const env = { OBSIDIAN_VAULT: vaultPath };
+  return isEphemeral
+    ? { command: "npx", args: ["-y", "github:neonn0d/twin"], env }
+    : { command: "node", args: [indexPath], env };
 }
 
 function writeMCPConfig(filepath: string, vaultPath: string): boolean {
@@ -179,8 +191,8 @@ async function main() {
         let cfg: any = {};
         if (exists(piSettings)) cfg = JSON.parse(fs.readFileSync(piSettings, "utf8"));
         if (!cfg.packages) cfg.packages = [];
-        if (!cfg.packages.includes("npm:@neonn0d/twin")) {
-          cfg.packages.push("npm:@neonn0d/twin");
+        if (!cfg.packages.includes("github:neonn0d/twin")) {
+          cfg.packages.push("github:neonn0d/twin");
           fs.mkdirSync(path.dirname(piSettings), { recursive: true });
           fs.writeFileSync(piSettings, JSON.stringify(cfg, null, 2));
           console.log("pi  ok");
