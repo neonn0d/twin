@@ -2,7 +2,6 @@ import { Type } from "typebox";
 import { saveKnowledge, getKnowledge, listKnowledge, searchKnowledge, deleteKnowledge } from "./tools/brain.js";
 import { logSession, updateProgress, sessionStart, sessionEnd } from "./tools/session.js";
 import { getProjectContext, setProjectContext, setNextSteps } from "./tools/project.js";
-import { listNotes, readNote, createNote, editNote, appendToNote, searchNotes, dailyNote, listTags, listFolders, moveNote, noteInfo, deleteNote } from "./tools/vault.js";
 export default function (pi) {
     const $ = (fn) => async (_id, params) => ({ details: {}, content: [{ type: "text", text: fn(params) }] });
     pi.registerTool({ name: "get_project_context", label: "Get Project Context", description: "Get project README and today's session", promptSnippet: "Load project context and session from vault", parameters: Type.Object({ cwd: Type.String() }), execute: $(getProjectContext) });
@@ -17,16 +16,4 @@ export default function (pi) {
     pi.registerTool({ name: "delete_knowledge", label: "Delete Knowledge", description: "Move a brain note to brain/.trash/", promptSnippet: "Trash a brain note", parameters: Type.Object({ cwd: Type.String(), topic: Type.String() }), execute: $(deleteKnowledge) });
     pi.registerTool({ name: "set_next_steps", label: "Set Next Steps", description: "Update README next steps", promptSnippet: "Update next steps in project README", parameters: Type.Object({ cwd: Type.String(), steps: Type.String() }), execute: $(setNextSteps) });
     pi.registerTool({ name: "set_project_context", label: "Set Project Context", description: "Update README context section", promptSnippet: "Update project context in README", parameters: Type.Object({ cwd: Type.String(), context: Type.String() }), execute: $(setProjectContext) });
-    pi.registerTool({ name: "list_notes", label: "List Notes", description: "List notes by folder or tag", promptSnippet: "List vault notes", parameters: Type.Object({ folder: Type.Optional(Type.String()), tag: Type.Optional(Type.String()) }), execute: $(listNotes) });
-    pi.registerTool({ name: "read_note", label: "Read Note", description: "Read full note content", promptSnippet: "Read vault note", parameters: Type.Object({ name: Type.String() }), execute: $(readNote) });
-    pi.registerTool({ name: "create_note", label: "Create Note", description: "Create a note, fails if exists", promptSnippet: "Create vault note", parameters: Type.Object({ name: Type.String(), content: Type.String(), tags: Type.Optional(Type.Array(Type.String())) }), execute: $(createNote) });
-    pi.registerTool({ name: "edit_note", label: "Edit Note", description: "Replace entire note content", promptSnippet: "Replace vault note", parameters: Type.Object({ name: Type.String(), content: Type.String() }), execute: $(editNote) });
-    pi.registerTool({ name: "append_to_note", label: "Append to Note", description: "Append text to a note", promptSnippet: "Append to vault note", parameters: Type.Object({ name: Type.String(), text: Type.String() }), execute: $(appendToNote) });
-    pi.registerTool({ name: "search_notes", label: "Search Notes", description: "Regex search across all notes", promptSnippet: "Search all vault notes", parameters: Type.Object({ query: Type.String(), case_sensitive: Type.Optional(Type.Boolean()) }), execute: $(searchNotes) });
-    pi.registerTool({ name: "daily_note", label: "Daily Note", description: "Get or create today's daily note", promptSnippet: "Today's daily note", parameters: Type.Object({ content: Type.Optional(Type.String()) }), execute: $(dailyNote) });
-    pi.registerTool({ name: "list_tags", label: "List Tags", description: "All tags with usage counts", promptSnippet: "List all vault tags", parameters: Type.Object({}), execute: async () => ({ details: {}, content: [{ type: "text", text: listTags() }] }) });
-    pi.registerTool({ name: "list_folders", label: "List Folders", description: "Vault folder structure", promptSnippet: "List vault folders", parameters: Type.Object({}), execute: async () => ({ details: {}, content: [{ type: "text", text: listFolders() }] }) });
-    pi.registerTool({ name: "move_note", label: "Move Note", description: "Move or rename a note", promptSnippet: "Move or rename note", parameters: Type.Object({ source: Type.String(), destination: Type.String() }), execute: $(moveNote) });
-    pi.registerTool({ name: "note_info", label: "Note Info", description: "Note tags, links, line count", promptSnippet: "Get note metadata", parameters: Type.Object({ name: Type.String() }), execute: $(noteInfo) });
-    pi.registerTool({ name: "delete_note", label: "Delete Note", description: "Move note to .trash/", promptSnippet: "Trash a note", parameters: Type.Object({ name: Type.String() }), execute: $(deleteNote) });
 }
