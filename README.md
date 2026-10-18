@@ -136,7 +136,13 @@ vault/
 
 ## Merging
 
-`save_knowledge` never overwrites. New sections replace old ones for the same heading. Items, discoveries, warnings, tips, questions, and tasks are appended and deduplicated. Diagrams are replaced if a new one is given.
+`save_knowledge` merges into an existing note instead of overwriting it:
+
+- **Replaced:** summary, a `## section` with the same heading, an item or pattern with the same name, the diagram (if a new one is given)
+- **Appended + deduplicated:** discoveries, warnings, tips, questions, tasks
+- **Kept:** everything you didn't send again
+
+Topic names become file names: `Auth Flow` → `brain/auth-flow.md`. Any language works (`مصادقة` → `brain/مصادقة.md`).
 
 MIT
 

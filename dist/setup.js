@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { execSync } from "node:child_process";
+import { execSync, execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 const homedir = os.homedir();
 // Where this build lives. If we're running from a real clone, point clients at
@@ -204,10 +204,23 @@ async function main() {
         const p = path.join(process.env.APPDATA || "", "Claude", "claude_desktop_config.json");
         apps.push({ name: "Claude Desktop", configure: () => console.log(writeMCPConfig(p, vaultPath) ? "Claude Desktop  ok" : "Claude Desktop  failed") });
     }
-    // Claude Code
+    // Claude Code keeps user-scope servers in ~/.claude.json, so register through its CLI
     if (hasCommand("claude")) {
-        const p = path.join(homedir, ".claude", "mcp.json");
-        apps.push({ name: "Claude Code (CLI)", configure: () => console.log(writeMCPConfig(p, vaultPath) ? "Claude Code  ok" : "Claude Code  failed") });
+        apps.push({ name: "Claude Code (CLI)", configure: () => {
+                const { command, args, env } = serverConfig(vaultPath);
+                const opts = { stdio: "pipe", shell: isWin() };
+                try {
+                    execFileSync("claude", ["mcp", "remove", "twin", "-s", "user"], opts);
+                }
+                catch { }
+                try {
+                    execFileSync("claude", ["mcp", "add", "twin", "-s", "user", "-e", `OBSIDIAN_VAULT=${env.OBSIDIAN_VAULT}`, "--", command, ...args], opts);
+                    console.log("Claude Code  ok");
+                }
+                catch {
+                    console.log("Claude Code  failed");
+                }
+            } });
     }
     // Cursor
     if (hasCommand("cursor") || exists(path.join(homedir, ".cursor"))) {
