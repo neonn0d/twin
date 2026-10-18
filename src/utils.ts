@@ -54,7 +54,9 @@ export function brainDir(cwd: string): string {
 }
 
 export function slugify(topic: string): string {
-  return topic.toLowerCase().trim().replace(/[^a-z0-9-]+/g, "-").replace(/^-|-$/g, "");
+  const slug = topic.normalize("NFC").toLowerCase().trim().replace(/[^\p{L}\p{N}-]+/gu, "-").replace(/^-+|-+$/g, "");
+  if (!slug) throw new Error(`Topic '${topic}' needs at least one letter or number`);
+  return slug;
 }
 
 export function sessionFilePath(cwd: string): string {
@@ -73,14 +75,17 @@ export function ensureSessionFile(cwd: string): string {
 
 export function updateSection(content: string, header: string, newBody: string): string {
   const level = header.match(/^#+/)?.[0]?.length || 2;
-  const title = header.replace(/^#+\s*/, "");
-  const pattern = new RegExp(
-    `(^|\\n)${"#".repeat(level)} ${title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\n.*?(?=\\n#|\\Z)`, "s"
-  );
-  const section = `\n${header}\n${newBody}`;
-  const match = content.match(pattern);
-  if (match) return content.slice(0, match.index!) + section + content.slice(match.index! + match[0].length);
-  return content.trimEnd() + "\n" + section + "\n";
+  const lines = content.split("\n");
+  const start = lines.findIndex(l => l.trimEnd() === header);
+  if (start === -1) return content.trimEnd() + "\n\n" + header + "\n" + newBody + "\n";
+  // Section runs until the next heading of the same or higher level, ignoring # lines inside code fences
+  const boundary = new RegExp(`^#{1,${level}} `);
+  let end = lines.length, inFence = false;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (lines[i].startsWith("```")) inFence = !inFence;
+    else if (!inFence && boundary.test(lines[i])) { end = i; break; }
+  }
+  return [...lines.slice(0, start + 1), newBody.trim(), "", ...lines.slice(end)].join("\n");
 }
 
 export function toStr(v: unknown): string {
@@ -179,6 +184,24 @@ export function parseBrainPatterns(body: string): Record<string, [string, string
   return patterns;
 }
 
+function stripTrailingBlocks(content: string): string {
+  const lines = content.split("\n");
+  let inFence = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!inFence) {
+      const nextLine = lines.slice(i + 1).find(l => l.trim()) || "";
+      if (line.startsWith("| Item | Detail |") || line.startsWith("```mermaid")
+        || /^> \[!(info|tip|warning|question)\]/.test(line)
+        || (line.startsWith("### ") && nextLine.startsWith("```"))) {
+        return lines.slice(0, i).join("\n").trim();
+      }
+    }
+    if (line.startsWith("```")) inFence = !inFence;
+  }
+  return content.trim();
+}
+
 export function mergeBrain(existing: string, newLines: string[]): string {
   const { body } = parseFrontmatter(existing);
   const oldSections = parseBrainSections(body);
@@ -192,11 +215,11 @@ export function mergeBrain(existing: string, newLines: string[]): string {
 
   const newText = newLines.join("\n");
   const newSections = parseBrainSections(newText);
-  // Strip trailing block content — greedy ## parsing captures items/diagrams/callouts
+  // Greedy ## parsing makes the last section swallow the items table, diagram, patterns and
+  // callouts written after it. Earlier sections end at the next ## so they are kept whole.
   for (const s of [oldSections, newSections]) {
-    for (const k of Object.keys(s)) {
-      s[k] = s[k].split(/\n(\| |```|> |## |\- \[.\] )/)[0];
-    }
+    const last = Object.keys(s).filter(k => k.toLowerCase() !== "to do").pop();
+    if (last) s[last] = stripTrailingBlocks(s[last]);
   }
   const newItems = parseBrainItems(newText);
   const newDiscoveries = parseBrainCallouts(newText, "info");
