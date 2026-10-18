@@ -1,57 +1,69 @@
 # twin
-<img width="1254" height="1254" alt="ChatGPT Image Jun 9, 2026, 05_46_59 PM" src="https://github.com/user-attachments/assets/df5e7674-0be4-4415-9b7e-a9a1550333d3" />
 
-MCP server for AI memory in an Obsidian vault.
+<img width="320" alt="twin" src="https://github.com/user-attachments/assets/df5e7674-0be4-4415-9b7e-a9a1550333d3" />
 
-> Not published to npm. Install from source (recommended) or run straight from
-> GitHub with `npx`. `dist/` is committed, so there's no build step either way.
+**Persistent memory for AI coding agents, saved as Markdown in your Obsidian vault.**
 
-## Install
+twin is an MCP server. It gives your agent (Claude Code, Cursor, Windsurf, Claude Desktop, Goose, pi, or any MCP client) tools to:
 
-### From source (recommended — offline, pinned to your checkout)
+- **remember** what it learns about a project: architecture, gotchas, decisions
+- **log** each work session: what changed, what's next
+- **load** all of that back at the start of the next session
 
-```
+Everything is plain `.md` files you can read and edit in Obsidian. No database, no cloud, no API keys.
+
+## Quick start
+
+You need Node 18+ and a folder for your notes. Obsidian itself is optional.
+
+**1. Install**
+
+```bash
 git clone https://github.com/neonn0d/twin
 cd twin
 npm install
 ```
 
-`dist/` is already built and committed, so you don't need to run `npm run build`
-unless you change the source. Then either run the wizard:
+**2. Connect it to your agent**
 
-```
+```bash
 node dist/cli.js --setup
 ```
 
-…which auto-configures detected clients with the absolute path to this checkout,
-or add the config manually (see [Manual config](#manual-config)).
+The wizard finds your Obsidian vault and the AI apps you have installed, then configures the ones you pick. For other clients, see [Connect manually](#connect-manually).
 
-### Quick (no clone — runs from GitHub each launch)
+**3. Tell your agent when to use it**
 
+Add this to `CLAUDE.md` (or your client's rules file) in any project:
+
+```md
+At the start of every session in this repo, call `get_project_context` from the
+twin MCP server with this directory as `cwd`. While working, save anything worth
+remembering with `save_knowledge`. When you finish, call `log_session`.
 ```
-npx github:neonn0d/twin --setup
+
+Without this, the agent has the tools but only uses them when you ask.
+
+Restart your agent and you're done.
+
+## Install it with an AI agent
+
+Paste this into Claude Code, Cursor or any agent that can run commands:
+
+```text
+Install the twin MCP server (https://github.com/neonn0d/twin):
+1. Clone it somewhere permanent, e.g. ~/twin, and run `npm install` there.
+2. Ask me for the path to my Obsidian vault (or the folder for notes).
+3. Register it with my MCP client. Command: `node <clone>/dist/index.js`,
+   env: OBSIDIAN_VAULT=<vault path>. For Claude Code use:
+   claude mcp add twin -s user -e OBSIDIAN_VAULT=<vault> -- node <clone>/dist/index.js
+4. Add the twin usage note from the README's "Quick start" step 3 to my CLAUDE.md.
+5. Tell me to restart, then call get_project_context to confirm it works.
 ```
 
-Needs `git` + network on first run; npx caches it afterward. Configures clients
-to launch via `npx github:neonn0d/twin`.
+## Connect manually
 
-## Supported clients
-
-| App | How |
-|-----|-----|
-| Claude Code (CLI) | `claude mcp add` (below), or auto-configured by setup |
-| Claude Desktop | Auto-configured by setup |
-| Cursor | Auto-configured by setup |
-| Windsurf | Auto-configured by setup |
-| Goose | Auto-configured by setup |
-| pi | Auto-configured by setup. Needs `OBSIDIAN_VAULT` env var |
-| Any MCP client | Manual config below |
-
-## Manual config
-
-Pick the command that matches how you installed.
-
-**From source** — point `node` at the absolute path of `dist/index.js` in your clone:
+Every MCP client uses the same server config. Replace both paths:
 
 ```json
 {
@@ -59,129 +71,84 @@ Pick the command that matches how you installed.
     "twin": {
       "command": "node",
       "args": ["/absolute/path/to/twin/dist/index.js"],
-      "env": { "OBSIDIAN_VAULT": "/path/to/your/vault" }
+      "env": { "OBSIDIAN_VAULT": "/absolute/path/to/your/vault" }
     }
   }
 }
 ```
 
-**From GitHub** — let npx fetch and run it:
+Don't want to clone? Use `"command": "npx", "args": ["-y", "github:neonn0d/twin"]` instead. It needs `git` and network on first run.
 
-```json
-{
-  "mcpServers": {
-    "twin": {
-      "command": "npx",
-      "args": ["-y", "github:neonn0d/twin"],
-      "env": { "OBSIDIAN_VAULT": "/path/to/your/vault" }
-    }
-  }
-}
-```
-
-### Claude Code (CLI)
-
-The cleanest route — register it with the CLI (from-source form shown):
-
-```
-claude mcp add twin -e OBSIDIAN_VAULT=/path/to/your/vault \
-  -- node /absolute/path/to/twin/dist/index.js
-```
-
-Or the GitHub form: `-- npx -y github:neonn0d/twin`.
-
-### Config file locations
-
-| App | Config file |
-|-----|-------------|
-| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows)<br>`~/.config/Claude/claude_desktop_config.json` (Linux) |
+| Client | Where the config goes |
+|--------|------------------------|
+| Claude Code | Run `claude mcp add twin -s user -e OBSIDIAN_VAULT=/path/to/vault -- node /path/to/twin/dist/index.js` |
+| Claude Desktop | macOS `~/Library/Application Support/Claude/claude_desktop_config.json`<br>Windows `%APPDATA%\Claude\claude_desktop_config.json`<br>Linux `~/.config/Claude/claude_desktop_config.json` |
 | Cursor | `.cursor/mcp.json` in your project |
 | Windsurf | `~/.codeium/windsurf/mcp.json` |
-| Continue (VS Code) | `~/.continue/config.json` under `experimental.mcpServers` |
-| pi | Add `github:neonn0d/twin` to `packages` in `~/.pi/agent/settings.json`, then `export OBSIDIAN_VAULT=/path/to/vault` in your shell config (`.zshrc` / `.bashrc`, or `setx` on Windows) |
 | Goose | `~/.config/goose/mcp.json` |
-| Any stdio MCP | Same JSON format |
+| Continue | `~/.continue/config.json`, under `experimental.mcpServers` |
+| pi | Add `github:neonn0d/twin` to `packages` in `~/.pi/agent/settings.json`, and set `OBSIDIAN_VAULT` in your shell profile |
 
-Restart the app after saving.
+Restart the app after changing its config.
 
-## Platform support
+## Using it
 
-Works on **macOS, Linux, WSL, and Windows** — it's plain Node, no native deps.
+Just ask in plain language:
 
-- **macOS / Linux / WSL** — fully supported, this is the common path.
-- **WSL** — run twin and your AI client on the same side. If the client is the
-  Windows app and the vault lives in WSL (or vice-versa), point `OBSIDIAN_VAULT`
-  at a path that side can actually see (e.g. `/mnt/c/Users/you/vault` from WSL,
-  or `\\wsl$\...` from Windows). Mixing sides is the only real gotcha.
-- **Windows (native)** — works. Use `node` + a full path, or `npx`. Setup detects
-  Claude Desktop via `%APPDATA%`.
+| You say | The agent calls |
+|---------|-----------------|
+| "Where did we leave off?" | `get_project_context` |
+| "Remember how the auth flow works" | `save_knowledge` |
+| "What do we know about the database?" | `search_knowledge` |
+| "Log this session and set next steps" | `log_session`, `set_next_steps` |
+| "Delete the note about the old payments flow" | `delete_knowledge` |
 
-Requires Node 18+ (ESM). Obsidian itself is optional — twin only needs the vault
-folder to exist; you don't have to run the Obsidian app.
+### All tools
 
-## Tools
+Every tool takes `cwd`: the project folder the agent is working in. That's how twin knows which project the notes belong to.
 
-**Project memory:** `get_project_context`, `session_start`, `session_end`, `log_session`, `update_progress`, `save_knowledge`, `get_knowledge`, `list_knowledge`, `search_knowledge`, `delete_knowledge`, `set_project_context`, `set_next_steps`
+| Tool | What it does |
+|------|--------------|
+| `get_project_context` | Read the project README and today's session log. **Call this first.** |
+| `save_knowledge` | Save a topic note. Merges into an existing note with the same topic. |
+| `get_knowledge` | Read one topic note (or list all if no topic is given). |
+| `list_knowledge` | List all topic notes for the project. |
+| `search_knowledge` | Search all topic notes (regex, case-insensitive by default). |
+| `delete_knowledge` | Move a topic note to `brain/.trash/`. |
+| `log_session` | Write a structured session entry: summary, files touched, discoveries, warnings, next steps. |
+| `session_start` | Create the project README and today's session log. |
+| `update_progress` | Add a quick timestamped line to today's log. |
+| `session_end` | Add a one-line end-of-session summary. Prefer `log_session`. |
+| `set_project_context` | Replace the README's **Context** section. |
+| `set_next_steps` | Replace the README's **Next Steps** section. |
 
-## Vault structure
+## Where notes go
+
+Each project gets a folder under `twin/` in your vault, mirroring its path from your home folder:
 
 ```
-vault/
-  twin/
-    path/to/project/
-      README.md
-      brain/          topic notes, auto-merge
-      sessions/       daily session logs
+~/Work/my-app  →  <vault>/twin/Work/my-app/
+                    README.md           context, next steps, links to sessions
+                    brain/<topic>.md    topic notes ("Auth Flow" → auth-flow.md)
+                    sessions/<date>.md  one log per day
 ```
 
-## Merging
+Projects outside your home folder go under `twin/<folder-name>/`. If `OBSIDIAN_VAULT` isn't set, twin uses `~/Documents/Obsidian`.
 
-`save_knowledge` merges into an existing note instead of overwriting it:
+## How saving merges
+
+`save_knowledge` never wipes a note. When the topic already exists:
 
 - **Replaced:** summary, a `## section` with the same heading, an item or pattern with the same name, the diagram (if a new one is given)
 - **Appended + deduplicated:** discoveries, warnings, tips, questions, tasks
 - **Kept:** everything you didn't send again
 
-Topic names become file names: `Auth Flow` → `brain/auth-flow.md`. Any language works (`مصادقة` → `brain/مصادقة.md`).
+Topic names can be in any language (`مصادقة` → `brain/مصادقة.md`).
+
+## Platforms
+
+macOS, Linux, Windows and WSL. It's plain Node with no native dependencies. On WSL, run twin and your AI app on the same side, or point `OBSIDIAN_VAULT` at a path both can see (`/mnt/c/...` from WSL, `\\wsl$\...` from Windows).
+
+## License
 
 MIT
-
-## Using twin
-
-Twin gives the agent tools — it doesn't run itself. Memory persists only when the agent calls `save_knowledge` / `log_session` to write, and only loads back when the agent calls `get_project_context` / `get_knowledge` to read. The vault is solid; the loop closes when both ends fire.
-
-### What the AI does (when prompted, or auto-instructed)
-
-1. **Session start** — calls `get_project_context` to load your README and today's session
-2. **While working** — calls `save_knowledge` when it discovers patterns, gotchas, or architecture details
-3. **Session end** — calls `log_session` with a title, summary, files touched, discoveries, and next steps. Then `set_next_steps`
-
-### Make it automatic
-
-Add a `CLAUDE.md` (or equivalent system-prompt file for your client) at the root of any project where you want twin to load context without you asking:
-
-```md
-At the start of every session in this repo, call `mcp__twin__get_project_context`
-with this directory as `cwd` before answering. When you finish meaningful work,
-save discoveries with `mcp__twin__save_knowledge` and wrap with
-`mcp__twin__log_session`.
-```
-
-Without this hint, the agent has the tools but no schedule — it'll only call them when you ask explicitly.
-
-### Asking your AI to use it
-
-**Start a project:**
-> Load my project context and tell me where we left off
-
-**Save something useful:**
-> Save a brain note about the auth flow we just built
-
-**Find past knowledge:**
-> Search brain notes for anything about the database schema
-
-**End a session:**
-> Log this session and set next steps
-
-**Drop a stale note:**
-> Delete the brain note about the old payments flow
